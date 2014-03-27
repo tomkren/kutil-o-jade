@@ -30,6 +30,20 @@ public class Firm {
         return e.getNum() >= num;
     }
     
+    public double addMoney (double delta) {
+        money += delta;
+        return money;
+    }
+    
+    public double addComodity (Comodity c, double delta) {
+        Elem e = inventory.get(c);
+        if (e == null) {
+            inventory.put(c, new NumElem(delta));
+            return delta;
+        }
+        return e.addNum(delta);
+    }
+    
     public String getFirmID () {
         return firmID;
     }
@@ -40,13 +54,24 @@ public class Firm {
     
     public static interface Elem {
         public double getNum();
+        public double addNum(double delta);
     }
     
     public static class NumElem implements Elem {
         double num;
+        
+        public NumElem (double d) {
+            num = d;
+        }
+        
         public double getNum() {
             return num;
-        }        
+        } 
+        
+        public double addNum(double delta){
+            num += delta;
+            return num;
+        } 
     }
 
 }

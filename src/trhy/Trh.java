@@ -51,6 +51,12 @@ public class Trh {
         hisFirmIDs.add(firmID);
         firms.put(firmID, hisFirm);
     }
+
+    public boolean isOwner (String agentID, String firmID) {
+        Set<String> hisFirms = ownership.get(agentID);
+        if (hisFirms == null) {return false;}
+        return hisFirms.contains(firmID);
+    }
     
     public Transaction.Result checkTransactionRequest (Transaction.Request tr) {
         
@@ -104,17 +110,44 @@ public class Trh {
         return Transaction.ko("Unsupported transaction request format.");
     }
     
-   
-    
-    public boolean isOwner (String agentID, String firmID) {
-        Set<String> hisFirms = ownership.get(agentID);
-        if (hisFirms == null) {return false;}
-        return hisFirms.contains(firmID);
-    }
+    public void subtractFromFirm(Transaction.Request tr) throws TrhException {
+        
+        Transaction.TRHead head = tr.getHead();        
+        Comodity comodity = head.comodity;
+        Firm firm = firms.get(head.firmID); // opakuje se zbytečně (při čekách už znám) 
+                                            // ale zatim na to srát
+        
+        if (tr instanceof Transaction.Sell) {
+            Transaction.Sell sell = (Transaction.Sell) tr;
 
+            double newNum = firm.addComodity(comodity, -sell.getNum() );
+            
+            if (newNum < 0) { 
+                firm.addComodity(comodity, sell.getNum() );
+                throw new TrhException("Komodita " + comodity + " ve firme " +
+                    head.firmID + " se dostala pod nulu, operace byla zvracena."+
+                    "Bylo by tam mnozstvi " + newNum + ".");
+            }
+            
+            
+        } else if (tr instanceof Transaction.Buy) {
+            Transaction.Buy buy = (Transaction.Buy) tr;
+            
+            double newMoney = firm.addMoney(-buy.getMoney());
+            
+            if (newMoney < 0) {
+                firm.addMoney( buy.getMoney() );
+                throw new TrhException("Peníze ve firme " +
+                    head.firmID + " se dostali pod nulu, operace byla zvracena."+
+                    "Bylo by tam $" + newMoney + ".");                
+            }
+        }
+        
+        
+    }
     
-    
-    
+   
+
     
     
     public static class TrhException extends Exception {
