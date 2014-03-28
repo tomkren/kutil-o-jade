@@ -27,6 +27,13 @@ public class Trh {
         currentTik = 0;
     }
     
+    public void incrementTik () {currentTik ++;}
+    public int getTik () {return currentTik;}
+    
+    private int nextTransID () {
+        return numTrans ++;
+    }
+    
     public void addTabule (Comodity c) {
         tabs.put(c, new Tabule(c));
     }
@@ -58,7 +65,7 @@ public class Trh {
         return hisFirms.contains(firmID);
     }
     
-    public Transaction.Result checkTransactionRequest (Transaction.Request tr) {
+    public Transaction.CheckResult checkTransactionRequest (Transaction.Request tr) {
         
         Transaction.TRHead head = tr.getHead();        
         
@@ -110,7 +117,7 @@ public class Trh {
         return Transaction.ko("Unsupported transaction request format.");
     }
     
-    public void subtractFromFirm(Transaction.Request tr) throws TrhException {
+    private void subtractFromFirm(Transaction.Request tr) throws TrhException {
         
         Transaction.TRHead head = tr.getHead();        
         Comodity comodity = head.comodity;
@@ -146,8 +153,23 @@ public class Trh {
         
     }
     
-   
+    private void addToTabule (Transaction.Request tr) throws TrhException {
+        
+        // TODO rozdělané
+        
+        Transaction.TRHead head = tr.getHead();
+        Comodity comodity = head.comodity;
+        
+        Tabule tab = tabs.get(comodity);
+        
+        if (tab == null) {
+            throw new TrhException("Požadovaná tabule není na trhu.");
+        }
+        
+        tab.add(tr, nextTransID(), currentTik);
 
+    }
+    
     
     
     public static class TrhException extends Exception {
